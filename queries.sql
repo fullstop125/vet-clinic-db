@@ -1,83 +1,71 @@
 /*Queries that provide answers to the questions from all projects.*/
 
-SELECT name from animals WHERE name LIKE '%mon';
+SELECT name from animals WHERE name iLIKE '%mon';
 SELECT * from animals WHERE EXTRACT(year from date_of_birth) BETWEEN 2016 AND 2019;
 SELECT name from animals WHERE neutered=true AND escape_attempts < 3;
 SELECT date_of_birth from animals WHERE name='Agumon' OR name='Pikachu';
 SELECT name, escape_attempts from animals WHERE weight_kg > 10.5;
 SELECT * from animals WHERE neutered = true;
 SELECT * from animals WHERE name != 'Gabumon';
-SELECT * from animals WHERE weight_kg >= 10.4 AND weight_kg <= 17.3; 
+SELECT * from animals WHERE weight_kg >= 10.4 AND weight_kg <= 17.3;
 
 begin;
-
-UPDATE animals SET species = 'unspecified';
-
+update animals set species='unspecified';
 rollback;
 
-select * from animals;
-
 begin;
-UPDATE animals set species = 'digimon' WHERE name like '%mon';
-UPDATE animals set species = 'pokemon' WHERE name not like '%mon';
 
+update animals SET species = 'Degimon' where name ilike '%mon';
+UPDATE animals SET species = 'Pokemon' where name not ilike '%mon';
 commit;
 
-select * from animals;
-
 begin;
 
-DELETE from animals;
-
+DELETE FROM animals;
 rollback;
 
-select * from animals;
-
 begin;
+savepoint aceUltra;
+DELETE from animals where date_of_birth >= '2022-01-01';
+rollback to aceUltra;
 
-savepoint backup1;
-
-DELETE from animals WHERE date_of_birth > '2022-01-01';
-
-rollback to backup1;
-
-select * from animals;
-
-savepoint backup2;
+savepoint luffy;
 
 UPDATE animals SET weight_kg = weight_kg * -1;
-
-select * from animals;
-
-rollback to backup2;
-
-select * from animals;
-
-UPDATE animals SET weight_kg = weight_kg * -1 WHERE weight_kg <0;
-
+rollback to luffy;
+UPDATE animals SET weight_kg = weight_kg * -1 where weight_kg < 0;
 commit;
-select * from animals;
 
-SELECT count(*) FROM animals;
+--================== QUERIES =========================
 
-select * from animals;
+                   -- DAY 2
 
-SELECT count(*) FROM animals WHERE escape_attempts = 0;
+SELECT count (*) AS animalCount from animals;
+SELECT * from animals where escape_attempts < 1;
+SELECT cast(avg (weight_kg) as DECIMAL(5,2)) as averageWeight from animals;
+SELECT name, max(escape_attempts) from animals where neutered = true or neutered = false group by name ORDER by max(escape_attempts) desc;
+SELECT max(weight_kg) as maxWeight, min(weight_kg) as minWeight from animals;
+SELECT cast(avg(escape_attempts) as DECIMAL(5,2)) as averageEscapeAttempts from animals WHERE EXTRACT(year from date_of_birth) between 1990 AND 2000;
 
-select * from animals;
+                   -- DAY 3
 
-SELECT cast(avg(weight_kg) AS DECIMAL(5,2)) FROM animals;
+-- animals belong to Melody Pond
+SELECT animals.name from animals join owners on animals.owners_id = owners.id where owners.full_name = 'Melody Pond';
 
-select * from animals;
+-- List of all animals that are pokemon.
+SELECT animals.name from animals join species on animals.species_id = species.id where species.name = 'Pokemon';
 
-SELECT max(escape_attempts),neutered FROM animals WHERE neutered = true OR neutered = false GROUP BY neutered ORDER BY max(escape_attempts) DESC;
+--all owners and their animals, include those that don't own any animal.
+SELECT owners.full_name, animals.name from owners left join animals on owners.id = animals.owners_id;
 
-select * from animals;
+-- How many animals are there per species
+SELECT species.name, count(animals.name) from species join animals on species.id = animals.species_id group by species.name;
 
-SELECT max(weight_kg),min(weight_kg) FROM animals;
+--  all Digimon owned by Jennifer Orwell.
+SELECT animals.name from animals join owners on animals.owners_id = owners.id join species on animals.species_id = species.id where owners.full_name = 'Jennifer Orwell' and species.name = 'Digimon';
 
-select * from animals;
+-- all animals owned by Dean Winchester that haven't tried to escape.
+SELECT animals.name from animals join owners on animals.owners_id = owners.id where owners.full_name = 'Dean Winchester' and animals.escape_attempts = 0;
 
-SELECT  cast(avg(escape_attempts) AS DECIMAL(5,2)) FROM animals WHERE EXTRACT(year from date_of_birth) BETWEEN 1990 and 2000;
-
-select * from animals;
+-- owns the most animals
+SELECT owners.full_name, count(animals.name) from owners join animals on owners.id = animals.owners_id group by owners.full_name order by count(animals.name) desc limit 1;
